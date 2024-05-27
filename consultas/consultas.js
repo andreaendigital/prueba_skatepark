@@ -18,11 +18,15 @@ const enlistarSkaters = async () => {
     const respuesta = await pool.query({
       text: "SELECT * FROM skaters",
     });
+    // console.log ("respuesta", respuesta);
+    console.log ("respuesta", respuesta.rows);
     if (respuesta.rowCount == 0) {
       console.log(
         "UPS! No existen registros de participantes. Agrega el primero!"
       );
-      return "UPS! No existen registros de participantes. Agrega el primero!";
+    //   return "UPS! No existen registros de participantes. Agrega el primero!";
+    return [];  // Devuelve un arreglo vacío si no hay registros
+
     } else {
       console.log("Skaters registrados: ", respuesta.rows);
       return respuesta.rows;
@@ -126,6 +130,7 @@ async function validarSkater(email, password) {
 // Funcion para editar a usuario/skater
 const editarSkater = async (id, nombre, anos_experiencia, especialidad) => {
   try {
+
     const result = await pool.query({
       text: `UPDATE skaters SET nombre = $2, anos_experiencia = $3, especialidad = $4 WHERE id = $1 RETURNING *;`,
       values: [id, nombre, anos_experiencia, especialidad],
@@ -158,7 +163,7 @@ const cambiarEstado = async (id, estado) => {
       values: [id, estado],
     });
     console.log(`Skater con id ${id}, su estado actual es ${estado}`);
-    //console.log("Participante Editado: ", result.rows[0]);
+    console.log("Participante Editado: ", result.rows[0]);
     return {
       success: true,
       message: `El participante con id ${id}, ha cambiado su Estado.`,
@@ -175,10 +180,40 @@ const cambiarEstado = async (id, estado) => {
 };
 
 //-------------------------------------------------------------------------------------------
+// Funcion para eliminar a usuario/skater
+const eliminar = async (id) =>{
+    try {
+        const result = await pool.query({
+          text: `DELETE FROM skaters WHERE id = $1 RETURNING *;`,
+          values: [id],
+        });
+        
+        if (result.rowCount === 0) {
+            // Maneja el caso cuando no se encuentra un registro con el ID proporcionado
+            return { success: false, message: `No se encontró un participante con el ID ${id}` };
+        }
+
+        console.log(`Skater con id ${id}, eliminado correctamente`);
+        console.log("Participante Eliminado en función eliminar ", result.rows[0]);
+        return result.rows[0];
+          } catch (err) {
+        console.log("Error General: ", err);
+        const final = errors(err.code, message);
+        console.log("Codigo de Error: ", final.code);
+        console.log("Status de Error: ", final.status);
+        console.log("Mensaje de Error: ", final.message);
+        console.log("Error Original: ", err.message);
+        return final;
+      }
+}
+
+
+//-------------------------------------------------------------------------------------------
 module.exports = {
   enlistarSkaters,
   insertar,
   validarSkater,
   editarSkater,
   cambiarEstado,
+  eliminar
 }; //exporto la función

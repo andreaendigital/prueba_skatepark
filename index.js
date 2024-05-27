@@ -34,7 +34,14 @@ app.listen(PORT_SERVER, () => {
 });
 
 // Importado funciones  desde el módulo consultas.js
-const { enlistarSkaters, insertar, validarSkater, editarSkater, cambiarEstado } = require("./consultas/consultas.js");
+const {
+  enlistarSkaters,
+  insertar,
+  validarSkater,
+  editarSkater,
+  cambiarEstado,
+  eliminar,
+} = require("./consultas/consultas.js");
 
 // Middlewares -----------------------------------------------------------------------------------------
 app.use(express.urlencoded({ extended: true }));
@@ -66,14 +73,19 @@ app.engine(
 );
 
 //RUTAS ASOCIADAS A LOS HANDLEBARS -------------------------------------------------------------------------
-//ruta raíz del servidor, se define la vista que queremos renderizar y por defecto busca archivo main.handlebars
-// app.get("/", (req, res) => {
-//     res.render("main");
-// });
 
+//ruta raíz del servidor, se define la vista que queremos renderizar y por defecto busca archivo main.handlebars
 app.get("/", async (req, res) => {
   try {
     const skaters = await enlistarSkaters();
+    if (skaters.length === 0) {
+      res.status(401).send(`
+        <script>
+        alert("UPS! No existen registros de participantes. Agrega el primero.");
+        window.location.href = "/registro";
+        </script>
+        `);
+    }
     res.render("index", { skaters });
   } catch (e) {
     res.status(500).send({
@@ -87,17 +99,27 @@ app.get("/registro", (req, res) => {
   res.render("Registro");
 });
 
-app.get("/admin", async  (req, res) => {
-    try {
-        const skaters = await enlistarSkaters();
-        res.render("Admin", { skaters });
-      } catch (e) {
-        res.status(500).send({
-          error: `Algo salió mal... ${e}`,
-          code: 500,
-        });
-      }
+app.get("/admin", async (req, res) => {
+  try {
+    const skaters = await enlistarSkaters();
+    console.log("skaters: ", skaters);
+    if (skaters.length === 0) {
+      res.status(401).send(`
+            <script>
+            alert("UPS! No existen registros de participantes. Agrega el primero.");
+            window.location.href = "/registro";
+            </script>
+            `);
+    }
+    // Renderizar la página de registro normalmente si hay registros
+    res.render("Admin", { skaters });
+  } catch (e) {
+    res.status(500).send({
+      error: `Algo salió mal... ${e}`,
+      code: 500,
     });
+  }
+});
 
 app.get("/datos", (req, res) => {
   res.render("Datos");
@@ -226,27 +248,30 @@ app.post("/login", async (req, res) => {
     console.log("Skater json stringify:", JSON.stringify(skaterExiste));
     console.log("Skater recibido :", skaterExiste);
 
+    if (skaterExiste == null) {
+      //Si no existe el usuario en la bbdd
+      console.log(
+        "Debe proporcionar todos los valores correctamente para ingresar."
+      );
 
-    if (skaterExiste == null) { //Si no existe el usuario en la bbdd 
-        console.log("Debe proporcionar todos los valores correctamente para ingresar.");
-        
       return res.status(401).send({
         error:
           "Debe proporcionar todos los valores correctamente para ingresar.",
         code: 401,
       });
-    } else if (skaterExiste.status == "500" ) { //Si la función devuelve un error 500
-        console.log("Error en el servidor");
-        
+    } else if (skaterExiste.status == "500") {
+      //Si la función devuelve un error 500
+      console.log("Error en el servidor");
+
       return res.status(500).send({
-        error:
-          "Error en el servidor o error interno del programa",
+        error: "Error en el servidor o error interno del programa",
         code: 500,
       });
-    } else { //Si existe el usuario en la bbdd
+    } else {
+      //Si existe el usuario en la bbdd
       const token = jwt.sign(skaterExiste, secretKey); //Genero el token con los datos del skater
       console.log("Token creado:", token);
-      
+
       res.status(200).send(token);
     } //envío el token como respuesta
   } catch (e) {
@@ -258,74 +283,109 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
 //------------------------------------------------------------------------------------------------------------
 //Ruta para ingresar al perfil:
 app.get("/perfil", (req, res) => {
-    const { token } = req.query
-    jwt.verify(token, secretKey, (err, skater) => {
-        console.log("entre a verify del token");
-        console.log("variable skater del token: ", skater);
+  const { token } = req.query;
+  jwt.verify(token, secretKey, (err, skater) => {
+    console.log("entre a verify del token");
+    console.log("variable skater del token: ", skater);
 
-        if (err) {
-            res.status(500).send({
-                error: `Algo salió mal...`,
-                message: err.message,
-                code: 500
-            })
-        } else {
-            res.render("Datos", { skater });
-        }
-    })
+    if (err) {
+      res.status(500).send({
+        error: `Algo salió mal...`,
+        message: err.message,
+        code: 500,
+      });
+    } else {
+      res.render("Datos", { skater });
+    }
+  });
 });
 
-
-
 //------------------------------------------------------------------------------------------------------------
-//Ruta para editar el perfil 
+//Ruta para editar el perfil
 app.put("/skaters", async (req, res) => {
-    const {id, nombre,anos_experiencia, especialidad} = req.body;
-    console.log("Valor del body: ", id, nombre,anos_experiencia, especialidad);
+  
+//   console.log("Cuerpo de la solicitud:", req.body);
+//   console.log("Valor del body, editando skater: ", id, nombre, anos_experiencia, especialidad);
+
     try {
-        const skaterEditado = await editarSkater(id,nombre,anos_experiencia, especialidad);
+        const { id, nombre, anos_experiencia, especialidad } = req.body;
+        if (!nombre ||  !anos_experiencia || !especialidad) {
+            console.log("Todos los campos son requeridos para registrarse.");
+    //  return      res.status(400).send("Todos los campos son requeridos para registrase");
+
+            return res.send(`
+                  <script>
+                  alert("Todos los campos son requeridos para registrarse.");
+                  window.location.reload();
+                  </script>
+                  `);
+          }
+        const skaterEditado = await editarSkater(
+        id,
+        nombre,
+        anos_experiencia,
+        especialidad
+        );
         return res.send(`
                 <script>
                 alert("${skaterEditado.message}");
                 window.location.href = '${"/"}';
                 </script>
             `);
-        
     } catch (e) {
         res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        })
-    };
+        error: `Algo salió mal... ${e}`,
+        code: 500,
+        });
+    }
 });
 
 //------------------------------------------------------------------------------------------------------------
-//Ruta para cambiar status del perfil 
+//Ruta para cambiar status del perfil
 app.put("/skaters/status/:id", async (req, res) => {
-    const { id } = req.params;
-    const { estado } = req.body;
-    console.log("Valor de estado recibido por req.body: ", estado)
-    try {
-         const estadoCambiado = cambiarEstado(id,estado);
-         return res.send(`
+  const { id } = req.params;
+  const { estado } = req.body;
+  console.log("Valor de estado recibido por req.body: ", estado);
+  try {
+    const estadoCambiado = cambiarEstado(id, estado);
+    return res.send(`
                 <script>
                 alert("${estadoCambiado.message}");
                 window.location.href = '${"/"}';
                 </script>
             `);
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        })
-    };
+  } catch (e) {
+    res.status(500).send({
+      error: `Algo salió mal... ${e}`,
+      code: 500,
+    });
+  }
 });
 
+//------------------------------------------------------------------------------------------------------------
+//Ruta para Eliminar un registro
+app.delete("/skaters/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const skaterEliminado = eliminar(id);
+    console.log("Participante Eliminado en ruta delete:", skaterEliminado);
+
+    if (skaterEliminado !== -1) {
+      //si devuelve un índice
+      res.status(200).send("Skater Eliminado con éxito");
+    } else {
+      res.status(400).send("No existe este Skater"); //si entrega el array -1 , el skater no existe
+    }
+  } catch (e) {
+    res.status(500).send({
+      error: `Algo salió mal... ${e}`,
+      code: 500,
+    });
+  }
+});
 
 //------------------------------------------------------------------------------------------------------------
 // Ruta genérica para manejar solicitudes a rutas no existentes
-
