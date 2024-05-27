@@ -87,9 +87,17 @@ app.get("/registro", (req, res) => {
   res.render("Registro");
 });
 
-app.get("/admin", (req, res) => {
-  res.render("Admin");
-});
+app.get("/admin", async  (req, res) => {
+    try {
+        const skaters = await enlistarSkaters();
+        res.render("Admin", { skaters });
+      } catch (e) {
+        res.status(500).send({
+          error: `Algo salió mal... ${e}`,
+          code: 500,
+        });
+      }
+    });
 
 app.get("/datos", (req, res) => {
   res.render("Datos");
@@ -294,3 +302,11 @@ app.put("/skaters", async (req, res) => {
         })
     };
 });
+
+//------------------------------------------------------------------------------------------------------------
+// Ruta genérica para manejar solicitudes a rutas no existentes
+
+// app.get("*", (req, res) => {
+//     //res.status(404).send("La ruta solicitada no existe en el servidor.");
+//     res.status(404).sendFile(path.join(__dirname, "/404.html"));
+//   });

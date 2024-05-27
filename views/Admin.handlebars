@@ -36,4 +36,24 @@
   </table>
 </div>
 
-<!-- hacer script  -->
+
+<script>
+  const changeStatus = async (id, e) => {
+
+    const estado = e.checked
+    console.log("Valor de estado recibido en ChangeStatus: ", estado)
+    try {
+      await axios.put(`/skaters/status/${id}`, {
+        estado
+      })
+      alert(estado ? "Skater aprobado!" : "Skater En revisión")
+      window.location = `/`
+    } catch ({ response }) {
+      const { data } = response
+      const { error } = data
+      alert(error)
+    }
+
+  }
+
+</script>
