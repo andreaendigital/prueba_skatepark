@@ -306,41 +306,40 @@ app.get("/perfil", (req, res) => {
 //------------------------------------------------------------------------------------------------------------
 //Ruta para editar el perfil
 app.put("/skaters", async (req, res) => {
-  
-//   console.log("Cuerpo de la solicitud:", req.body);
-//   console.log("Valor del body, editando skater: ", id, nombre, anos_experiencia, especialidad);
+  //   console.log("Cuerpo de la solicitud:", req.body);
+  //   console.log("Valor del body, editando skater: ", id, nombre, anos_experiencia, especialidad);
 
-    try {
-        const { id, nombre, anos_experiencia, especialidad } = req.body;
-        if (!nombre ||  !anos_experiencia || !especialidad) {
-            console.log("Todos los campos son requeridos para registrarse.");
-    //  return      res.status(400).send("Todos los campos son requeridos para registrase");
+  try {
+    const { id, nombre, anos_experiencia, especialidad } = req.body;
+    if (!nombre || !anos_experiencia || !especialidad) {
+      console.log("Todos los campos son requeridos para registrarse.");
+      //  return      res.status(400).send("Todos los campos son requeridos para registrase");
 
-            return res.send(`
+      return res.send(`
                   <script>
                   alert("Todos los campos son requeridos para registrarse.");
                   window.location.reload();
                   </script>
                   `);
-          }
-        const skaterEditado = await editarSkater(
-        id,
-        nombre,
-        anos_experiencia,
-        especialidad
-        );
-        return res.send(`
+    }
+    const skaterEditado = await editarSkater(
+      id,
+      nombre,
+      anos_experiencia,
+      especialidad
+    );
+    return res.send(`
                 <script>
                 alert("${skaterEditado.message}");
                 window.location.href = '${"/"}';
                 </script>
             `);
-    } catch (e) {
-        res.status(500).send({
-        error: `Algo salió mal... ${e}`,
-        code: 500,
-        });
-    }
+  } catch (e) {
+    res.status(500).send({
+      error: `Algo salió mal... ${e}`,
+      code: 500,
+    });
+  }
 });
 
 //------------------------------------------------------------------------------------------------------------
@@ -389,3 +388,13 @@ app.delete("/skaters/:id", async (req, res) => {
 
 //------------------------------------------------------------------------------------------------------------
 // Ruta genérica para manejar solicitudes a rutas no existentes
+app.get("*", (req, res) => {
+  //res.status(404).send("La ruta solicitada no existe en el servidor.");
+  // res.status(404).send("Skater Eliminado con éxito");
+  return res.send(`
+    <script>
+    alert("Esta pagina no existe");
+    window.location.href = '${"/"}';
+    </script>
+    `);
+});
