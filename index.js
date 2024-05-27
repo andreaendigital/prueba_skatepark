@@ -134,9 +134,10 @@ app.get("/login", (req, res) => {
 // });
 
 // app.get("/", (req, res) => {res.sendFile(__dirname + '/index.html')})
-//por defecto, los partials son buscados en "partials" dentro de views, porciones de código que se invocan con dobles llaves {{>meunu}}
+
 
 // Rutas de API REST de Skaters -----------------------------------------------------------------------------
+
 app.get("/skaters", async (req, res) => {
   try {
     res.status(200).send(skaters);
@@ -390,7 +391,6 @@ app.delete("/skaters/:id", async (req, res) => {
 // Ruta genérica para manejar solicitudes a rutas no existentes
 app.get("*", (req, res) => {
   //res.status(404).send("La ruta solicitada no existe en el servidor.");
-  // res.status(404).send("Skater Eliminado con éxito");
   return res.send(`
     <script>
     alert("Esta pagina no existe");

@@ -16,8 +16,3 @@ CREATE TABLE skaters (
 \dt 
 
 \d skaters;
-
--- INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado) VALUES ('skater1@correo.com', 'Skater 1', '123', 5, 'Vert Ramp', './public/uploads/tony.jpg', TRUE);
--- C:\Users\Andrea\Desktop\Beca Talento Digital\Modulo 8\dia 11 viernes 24 mayo - prueba\prueba_skatepark\public\uploads\tony.jpg 
-
--- INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado) VALUES ('skater1@correo.com', 'Skater 1', '123', 5, 'Vert Ramp', '/uploads/tony.jpg', TRUE);
