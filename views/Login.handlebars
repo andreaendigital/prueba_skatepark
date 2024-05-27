@@ -10,12 +10,35 @@
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input class="form-control w-50 m-auto" />
+             <input type = "password" class="form-control w-50 m-auto" />
           </div>
         </div>
         <button class="btn btn-success mb-3">Ingresar</button>
-        <p>¿Aún no tienes cuenta? <a href="#">Regístrate</a></p>
+         <p>¿Aún no tienes cuenta? <a href="/registro">Regístrate</a></p>
       </form>
     </div>
 
-    <!-- hacer script  -->
+  
+<script>
+
+  const form = document.querySelector("form")
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault()
+
+    let [email, password] = document.querySelectorAll("input")
+
+    email = email.value
+    password = password.value
+
+    try {
+      const { data: token } = await axios.post("/login", { email, password })
+      window.location = `/Perfil?token=${token}`
+    } catch ({ response }) {
+      const { data } = response
+      const { error } = data
+      alert(error)
+    }
+
+  })
+</script>

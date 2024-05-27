@@ -125,20 +125,31 @@ app.post("/skaters", async (req, res) => {
     // console.log("body que llega: ", req.body);
     const { nombre, email, password, anos_experiencia, especialidad } =
       req.body; // Extraer los campos del cuerpo de la solicitud
-    console.log("Valor del req.body: ", req.body);
 
     // Validar que los campos no estén vacíos
-    if (nombre == "" || email == "") {
-      console.log("Todos los campos son requeridos.");
-      return res.status(400).json({
-        error: "Todos los campos son requeridos.",
-      });
+
+    if (!nombre || !email || !password || !anos_experiencia || !especialidad) {
+      console.log("Todos los campos son requeridos para registrarse.");
+      return res.status(401).send(`
+            <script>
+            alert("Todos los campos son requeridos para registrarse.");
+            window.location.href = "/registro";
+            </script>
+            `);
     }
 
-    if (Object.keys(req.files).length == 0) {
-      return res
-        .status(400)
-        .send("No se encontro ningun archivo en la consulta");
+    console.log("Valor del req.body: ", req.body);
+
+    // Validar que se adjunte archivo
+
+    if (req.files == null) {
+      console.log("No se encontro ningun archivo, adjunte foto por favor");
+      return res.status(400).send(`
+                <script>
+                alert("No se encontro ningun archivo, adjunte foto por favor");
+                window.location.href = "/registro";
+                </script>
+            `);
     }
     const { files } = req;
     const { foto } = files;
@@ -182,16 +193,14 @@ app.post("/skaters", async (req, res) => {
       }
     });
 
-    //    // Validar que el campo 'balance' sea un número
-    //    if (anos_experiencia == null) {
-    //     console.log("El campo 'balance' debe ser un número.");
-    //     return res.status(400).json({
-    //       error: "El campo 'balance' debe ser un número.",
-    //     });
-    //   }
   } catch (error) {
     // console.log("Error: ", error);
     console.log("Error: ", error.message);
     res.status(500).send(error);
   }
 });
+
+//------------------------------------------------------------------------------------------------------------
+//Ruta para ingresar al Login y generar Token:
+
+
