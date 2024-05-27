@@ -138,7 +138,32 @@ const editarSkater = async (id, nombre, anos_experiencia, especialidad) => {
       success: true,
       message: `El Skater ${nombre} ha actualizado sus datos correctamente.`,
     }; // Devuelve respuesta de actualización
-  }  catch (err) {
+  } catch (err) {
+    console.log("Error General: ", err);
+    const final = errors(err.code, message);
+    console.log("Codigo de Error: ", final.code);
+    console.log("Status de Error: ", final.status);
+    console.log("Mensaje de Error: ", final.message);
+    console.log("Error Original: ", err.message);
+    return final;
+  }
+};
+
+//-------------------------------------------------------------------------------------------
+// Funcion para editar a usuario/skater
+const cambiarEstado = async (id, estado) => {
+  try {
+    const result = await pool.query({
+      text: `UPDATE skaters SET estado = $2 WHERE id = $1 RETURNING *;`,
+      values: [id, estado],
+    });
+    console.log(`Skater con id ${id}, su estado actual es ${estado}`);
+    //console.log("Participante Editado: ", result.rows[0]);
+    return {
+      success: true,
+      message: `El participante con id ${id}, ha cambiado su Estado.`,
+    };
+  } catch (err) {
     console.log("Error General: ", err);
     const final = errors(err.code, message);
     console.log("Codigo de Error: ", final.code);
@@ -155,4 +180,5 @@ module.exports = {
   insertar,
   validarSkater,
   editarSkater,
+  cambiarEstado,
 }; //exporto la función

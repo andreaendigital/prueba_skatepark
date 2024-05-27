@@ -34,7 +34,7 @@ app.listen(PORT_SERVER, () => {
 });
 
 // Importado funciones  desde el módulo consultas.js
-const { enlistarSkaters, insertar, validarSkater, editarSkater } = require("./consultas/consultas.js");
+const { enlistarSkaters, insertar, validarSkater, editarSkater, cambiarEstado } = require("./consultas/consultas.js");
 
 // Middlewares -----------------------------------------------------------------------------------------
 app.use(express.urlencoded({ extended: true }));
@@ -304,9 +304,28 @@ app.put("/skaters", async (req, res) => {
 });
 
 //------------------------------------------------------------------------------------------------------------
+//Ruta para cambiar status del perfil 
+app.put("/skaters/status/:id", async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    console.log("Valor de estado recibido por req.body: ", estado)
+    try {
+         const estadoCambiado = cambiarEstado(id,estado);
+         return res.send(`
+                <script>
+                alert("${estadoCambiado.message}");
+                window.location.href = '${"/"}';
+                </script>
+            `);
+    } catch (e) {
+        res.status(500).send({
+            error: `Algo salió mal... ${e}`,
+            code: 500
+        })
+    };
+});
+
+
+//------------------------------------------------------------------------------------------------------------
 // Ruta genérica para manejar solicitudes a rutas no existentes
 
-// app.get("*", (req, res) => {
-//     //res.status(404).send("La ruta solicitada no existe en el servidor.");
-//     res.status(404).sendFile(path.join(__dirname, "/404.html"));
-//   });
