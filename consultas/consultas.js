@@ -45,8 +45,9 @@ async function insertar(datos) {
     //insertar recibe el array datos:
     //   console.log("Valores recibidos: ", datos);
 
-    const [email, nombre, password, anos_experiencia, especialidad, foto] = datos; // Extraer datos del array datos
-  
+    const [email, nombre, password, anos_experiencia, especialidad, foto] =
+      datos; // Extraer datos del array datos
+
     //contruyo el pool query y lo asigno a variable.
     const result = await pool.query({
       // construimos la instrucción y asignamos valores
@@ -87,7 +88,42 @@ async function insertar(datos) {
 }
 
 //-------------------------------------------------------------------------------------------
+// Funcion para validar usuarios a la bd
+async function validarSkater(email, password) {
+    try {
+        //contruyo el pool query y lo asigno a variable.
+        console.log("valores recibidos de email y password en funcion validar", email, password);
+        const result = await pool.query({
+        // construimos la instrucción y asignamos valores
+        text: `SELECT id FROM skaters WHERE email = $1 AND password = $2`,
+        values: [email, password],
+        });
+        console.log("resultado del await query consulta: ", result.rows);
+        
+        if (result.rowCount === 0) {
+        console.log('Datos de acceso inválidos, por favor reintente.');
+        return null; 
+        } else {
+            const {id} = result.rows[0];
+            return {id,email,password};
+        }
+    } catch (err) {
+        console.log("Error General: ", err);
+        const final = errors(err.code, message);
+        console.log("Codigo de Error: ", final.code);
+        console.log("Status de Error: ", final.status);
+        console.log("Mensaje de Error: ", final.message);
+        console.log("Error Original: ", err.message);
+        return final;
+    }
+};
+           
+
+
+
+//-------------------------------------------------------------------------------------------
 module.exports = {
   enlistarSkaters,
   insertar,
+  validarSkater,
 }; //exporto la función

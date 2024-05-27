@@ -34,7 +34,7 @@ app.listen(PORT_SERVER, () => {
 });
 
 // Importado funciones  desde el módulo consultas.js
-const { enlistarSkaters, insertar } = require("./consultas/consultas.js");
+const { enlistarSkaters, insertar, validarSkater } = require("./consultas/consultas.js");
 
 // Middlewares -----------------------------------------------------------------------------------------
 app.use(express.urlencoded({ extended: true }));
@@ -192,7 +192,6 @@ app.post("/skaters", async (req, res) => {
         });
       }
     });
-
   } catch (error) {
     // console.log("Error: ", error);
     console.log("Error: ", error.message);
@@ -202,5 +201,58 @@ app.post("/skaters", async (req, res) => {
 
 //------------------------------------------------------------------------------------------------------------
 //Ruta para ingresar al Login y generar Token:
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Valido que el email y el password se ingresen
+  if (!email || !password) {
+    return res.status(400).send({
+      error: "Debe proporcionar el correo electrónico y la contraseña.",
+      code: 400,
+    });
+  }
+
+  try {
+    //Validar si usuario/skater existe en la bbdd
+    const skaterExiste = await validarSkater(email, password); // Llamada a la función de consulta bd para validar usuario
+    console.log("Skater json stringify:", JSON.stringify(skaterExiste));
+    console.log("Skater recibido :", skaterExiste);
 
 
+    if (skaterExiste == null) { //Si no existe el usuario en la bbdd 
+        console.log("Debe proporcionar todos los valores correctamente para ingresar.");
+        
+      return res.status(401).send({
+        error:
+          "Debe proporcionar todos los valores correctamente para ingresar.",
+        code: 401,
+      });
+    } else if (skaterExiste.status == "500" ) { //Si la función devuelve un error 500
+        console.log("Error en el servidor");
+        
+      return res.status(500).send({
+        error:
+          "Error en el servidor o error interno del programa",
+        code: 500,
+      });
+    } else { //Si existe el usuario en la bbdd
+      const token = jwt.sign(skaterExiste, secretKey); //Genero el token con los datos del skater
+      console.log("Token creado:", token);
+      
+      res.status(200).send(token);
+    } //envío el token como respuesta
+
+    // const skater = skaters.find(
+    //   (s) => s.email == email && s.password == password
+    // );
+
+    // const token = jwt.sign(skater, secretKey);
+    // res.status(200).send(token);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({
+      error: `Algo salió mal... ${e}`,
+      code: 500,
+    });
+  }
+});
