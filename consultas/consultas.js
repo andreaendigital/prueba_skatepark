@@ -90,40 +90,69 @@ async function insertar(datos) {
 //-------------------------------------------------------------------------------------------
 // Funcion para validar usuarios a la bd
 async function validarSkater(email, password) {
-    try {
-        //contruyo el pool query y lo asigno a variable.
-        console.log("valores recibidos de email y password en funcion validar", email, password);
-        const result = await pool.query({
-        // construimos la instrucción y asignamos valores
-        text: `SELECT id FROM skaters WHERE email = $1 AND password = $2`,
-        values: [email, password],
-        });
-        console.log("resultado del await query consulta: ", result.rows);
-        
-        if (result.rowCount === 0) {
-        console.log('Datos de acceso inválidos, por favor reintente.');
-        return null; 
-        } else {
-            const {id} = result.rows[0];
-            return {id,email,password};
-        }
-    } catch (err) {
-        console.log("Error General: ", err);
-        const final = errors(err.code, message);
-        console.log("Codigo de Error: ", final.code);
-        console.log("Status de Error: ", final.status);
-        console.log("Mensaje de Error: ", final.message);
-        console.log("Error Original: ", err.message);
-        return final;
+  try {
+    //contruyo el pool query y lo asigno a variable.
+    console.log(
+      "valores recibidos de email y password en funcion validar",
+      email,
+      password
+    );
+    const result = await pool.query({
+      // construimos la instrucción y asignamos valores
+      text: `SELECT id FROM skaters WHERE email = $1 AND password = $2`,
+      values: [email, password],
+    });
+    console.log("resultado del await query consulta: ", result.rows);
+
+    if (result.rowCount === 0) {
+      console.log("Datos de acceso inválidos, por favor reintente.");
+      return null;
+    } else {
+      const { id } = result.rows[0];
+      return { id, email, password };
     }
+  } catch (err) {
+    console.log("Error General: ", err);
+    const final = errors(err.code, message);
+    console.log("Codigo de Error: ", final.code);
+    console.log("Status de Error: ", final.status);
+    console.log("Mensaje de Error: ", final.message);
+    console.log("Error Original: ", err.message);
+    return final;
+  }
+}
+
+//-------------------------------------------------------------------------------------------
+// Funcion para editar a usuario/skater
+const editarSkater = async (id, nombre, anos_experiencia, especialidad) => {
+  try {
+    const result = await pool.query({
+      text: `UPDATE skaters SET nombre = $2, anos_experiencia = $3, especialidad = $4 WHERE id = $1 RETURNING *;`,
+      values: [id, nombre, anos_experiencia, especialidad],
+    });
+    console.log(
+      `Skater ${nombre} con id ${id} y especialidad ${especialidad} actualizado con éxito`
+    );
+    console.log("Skater Editado: ", result.rows[0]);
+    return {
+      success: true,
+      message: `El Skater ${nombre} ha actualizado sus datos correctamente.`,
+    }; // Devuelve respuesta de actualización
+  }  catch (err) {
+    console.log("Error General: ", err);
+    const final = errors(err.code, message);
+    console.log("Codigo de Error: ", final.code);
+    console.log("Status de Error: ", final.status);
+    console.log("Mensaje de Error: ", final.message);
+    console.log("Error Original: ", err.message);
+    return final;
+  }
 };
-           
-
-
 
 //-------------------------------------------------------------------------------------------
 module.exports = {
   enlistarSkaters,
   insertar,
   validarSkater,
+  editarSkater,
 }; //exporto la función

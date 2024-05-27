@@ -34,7 +34,7 @@ app.listen(PORT_SERVER, () => {
 });
 
 // Importado funciones  desde el módulo consultas.js
-const { enlistarSkaters, insertar, validarSkater } = require("./consultas/consultas.js");
+const { enlistarSkaters, insertar, validarSkater, editarSkater } = require("./consultas/consultas.js");
 
 // Middlewares -----------------------------------------------------------------------------------------
 app.use(express.urlencoded({ extended: true }));
@@ -274,4 +274,23 @@ app.get("/perfil", (req, res) => {
 
 
 //------------------------------------------------------------------------------------------------------------
-//Ruta para ingresar al perfil:
+//Ruta para editar el perfil 
+app.put("/skaters", async (req, res) => {
+    const {id, nombre,anos_experiencia, especialidad} = req.body;
+    console.log("Valor del body: ", id, nombre,anos_experiencia, especialidad);
+    try {
+        const skaterEditado = await editarSkater(id,nombre,anos_experiencia, especialidad);
+        return res.send(`
+                <script>
+                alert("${skaterEditado.message}");
+                window.location.href = '${"/"}';
+                </script>
+            `);
+        
+    } catch (e) {
+        res.status(500).send({
+            error: `Algo salió mal... ${e}`,
+            code: 500
+        })
+    };
+});
