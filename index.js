@@ -241,13 +241,6 @@ app.post("/login", async (req, res) => {
       
       res.status(200).send(token);
     } //envío el token como respuesta
-
-    // const skater = skaters.find(
-    //   (s) => s.email == email && s.password == password
-    // );
-
-    // const token = jwt.sign(skater, secretKey);
-    // res.status(200).send(token);
   } catch (e) {
     console.log(e);
     res.status(500).send({
@@ -256,3 +249,29 @@ app.post("/login", async (req, res) => {
     });
   }
 });
+
+
+//------------------------------------------------------------------------------------------------------------
+//Ruta para ingresar al perfil:
+app.get("/perfil", (req, res) => {
+    const { token } = req.query
+    jwt.verify(token, secretKey, (err, skater) => {
+        console.log("entre a verify del token");
+        console.log("variable skater del token: ", skater);
+
+        if (err) {
+            res.status(500).send({
+                error: `Algo salió mal...`,
+                message: err.message,
+                code: 500
+            })
+        } else {
+            res.render("Datos", { skater });
+        }
+    })
+});
+
+
+
+//------------------------------------------------------------------------------------------------------------
+//Ruta para ingresar al perfil:
